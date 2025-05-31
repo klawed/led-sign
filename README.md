@@ -2,6 +2,13 @@
 
 A collection of libraries and scripts for interfacing with programmable LED signs, specifically designed for scrolling message displays commonly used in retail, offices, and public spaces.
 
+## 🎯 Interactive Demos
+
+Experience the LED sign system with our interactive demonstrations:
+
+- **[🎨 Animated Architecture Diagram](docs/animated-architecture.html)** - Interactive 3D system overview with floating animations
+- **[💻 Live Code Demo](docs/interactive-code-demo.html)** - Run C# and Perl examples with simulated LED output
+
 ## Overview
 
 This repository contains multiple implementations for controlling LED signs:
@@ -71,6 +78,8 @@ graph TD
     M[Special Characters] --> E
 ```
 
+> 💡 **Note**: For a fully interactive animated version of this diagram, check out our [animated architecture visualization](docs/animated-architecture.html)!
+
 ## Configuration Options
 
 ### Run Modes
@@ -127,6 +136,8 @@ stty 2400 -opost -ocrnl -onlcr cs8 parenb -parodd stop 0 < /dev/ttyUSB0
 ./signControl.pl "TEST MESSAGE"
 ```
 
+> 🚀 **Try it interactively**: Use our [live code demo](docs/interactive-code-demo.html) to see how the commands work!
+
 ## Troubleshooting
 
 **Common Issues:**
@@ -150,6 +161,9 @@ This project is open source. Please check individual file headers for specific l
 
 ## Resources
 
-- Protocol documentation: See `Proto-7x80.doc` for detailed technical specifications
-- Hardware vendors: Search for "programmable LED scrolling message sign" or "7x80 LED display"
-- Serial communication: Ensure your system has appropriate serial drivers installed
+- **Interactive Demos**: 
+  - [Animated Architecture](docs/animated-architecture.html) - 3D system visualization
+  - [Code Demo](docs/interactive-code-demo.html) - Live C# and Perl examples
+- **Protocol documentation**: See `Proto-7x80.doc` for detailed technical specifications
+- **Hardware vendors**: Search for "programmable LED scrolling message sign" or "7x80 LED display"
+- **Serial communication**: Ensure your system has appropriate serial drivers installed
