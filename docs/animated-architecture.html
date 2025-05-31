@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Sign System Architecture</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            margin: 0;
+            padding: 20px;
+            color: white;
+            overflow-x: auto;
+        }
+
+        .diagram-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 600px;
+        }
+
+        .node {
+            position: absolute;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .node:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 12px 40px rgba(255, 69, 0, 0.4);
+            border-color: #ff4500;
+        }
+
+        /* LED Sign themed colors */
+        .app { 
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            top: 50px; left: 50px;
+            animation-delay: 0s;
+        }
+        
+        .library { 
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            top: 50px; left: 300px;
+            animation-delay: 0.5s;
+        }
+        
+        .serial { 
+            background: linear-gradient(135deg, #45b7d1, #2196f3);
+            top: 50px; left: 550px;
+            animation-delay: 1s;
+        }
+        
+        .hardware { 
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            top: 50px; left: 800px;
+            animation-delay: 1.5s;
+        }
+        
+        .processing { 
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            top: 200px; left: 300px;
+            animation-delay: 2s;
+        }
+        
+        .font { 
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            top: 350px; left: 150px;
+            animation-delay: 2.5s;
+        }
+        
+        .color { 
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            top: 350px; left: 300px;
+            animation-delay: 3s;
+        }
+        
+        .animation { 
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            top: 350px; left: 450px;
+            animation-delay: 3.5s;
+        }
+        
+        .config { 
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            top: 200px; left: 650px;
+            animation-delay: 4s;
+        }
+        
+        .runmode { 
+            background: linear-gradient(135deg, #16a085, #1abc9c);
+            top: 350px; left: 600px;
+            animation-delay: 4.5s;
+        }
+        
+        .display { 
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            top: 350px; left: 750px;
+            animation-delay: 5s;
+        }
+        
+        .clock { 
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            top: 200px; left: 50px;
+            animation-delay: 5.5s;
+        }
+        
+        .special { 
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            top: 500px; left: 300px;
+            animation-delay: 6s;
+        }
+
+        .connection {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #ff4500, #ff6b6b, #ff4500);
+            background-size: 200% 100%;
+            animation: flow 2s linear infinite;
+            border-radius: 2px;
+            opacity: 0.8;
+            box-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+        }
+
+        .connection::before {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -3px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid #ff4500;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        /* Connection lines */
+        .conn1 { top: 67px; left: 180px; width: 100px; }
+        .conn2 { top: 67px; left: 430px; width: 100px; }
+        .conn3 { top: 67px; left: 680px; width: 100px; }
+        .conn4 { top: 130px; left: 360px; width: 3px; height: 60px; transform: rotate(90deg); }
+        .conn5 { top: 280px; left: 210px; width: 80px; transform: rotate(45deg); }
+        .conn6 { top: 280px; left: 350px; width: 3px; height: 60px; transform: rotate(90deg); }
+        .conn7 { top: 280px; left: 400px; width: 80px; transform: rotate(-45deg); }
+        .conn8 { top: 130px; left: 710px; width: 3px; height: 60px; transform: rotate(90deg); }
+        .conn9 { top: 280px; left: 560px; width: 80px; transform: rotate(45deg); }
+        .conn10 { top: 280px; left: 700px; width: 80px; transform: rotate(-45deg); }
+        .conn11 { top: 130px; left: 110px; width: 3px; height: 60px; transform: rotate(90deg); }
+        .conn12 { top: 380px; left: 360px; width: 3px; height: 110px; transform: rotate(90deg); }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .title {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.8;
+        }
+
+        .led-effect {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ff4500;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; box-shadow: 0 0 10px #ff4500; }
+            51%, 100% { opacity: 0.3; box-shadow: none; }
+        }
+
+        .led1 { top: 65px; left: 190px; animation-delay: 0s; }
+        .led2 { top: 65px; left: 440px; animation-delay: 0.3s; }
+        .led3 { top: 65px; left: 690px; animation-delay: 0.6s; }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            max-width: 250px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .diagram-container:hover .info-panel {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram-container">
+        <h1 class="title">LED Sign System Architecture</h1>
+        <p class="subtitle">Interactive Animated Diagram</p>
+        
+        <!-- Main flow -->
+        <div class="node app" data-info="User applications and control interfaces">Application</div>
+        <div class="node library" data-info="Core LED sign communication library">LED Sign Library</div>
+        <div class="node serial" data-info="Serial port communication handler">Serial Communication</div>
+        <div class="node hardware" data-info="Physical LED sign hardware">LED Sign Hardware</div>
+        
+        <!-- Processing branch -->
+        <div class="node processing" data-info="Message parsing and formatting">Message Processing</div>
+        <div class="node font" data-info="Font selection and sizing">Font Selection</div>
+        <div class="node color" data-info="Color and brightness control">Color Control</div>
+        <div class="node animation" data-info="Special effects and animations">Animation Effects</div>
+        
+        <!-- Configuration branch -->
+        <div class="node config" data-info="System configuration settings">Configuration</div>
+        <div class="node runmode" data-info="Display behavior modes">Run Modes</div>
+        <div class="node display" data-info="Display properties and settings">Display Properties</div>
+        
+        <!-- Additional features -->
+        <div class="node clock" data-info="Real-time clock synchronization">Clock Sync</div>
+        <div class="node special" data-info="Special characters and symbols">Special Characters</div>
+        
+        <!-- Animated connections -->
+        <div class="connection conn1"></div>
+        <div class="connection conn2"></div>
+        <div class="connection conn3"></div>
+        <div class="connection conn4"></div>
+        <div class="connection conn5"></div>
+        <div class="connection conn6"></div>
+        <div class="connection conn7"></div>
+        <div class="connection conn8"></div>
+        <div class="connection conn9"></div>
+        <div class="connection conn10"></div>
+        <div class="connection conn11"></div>
+        <div class="connection conn12"></div>
+        
+        <!-- LED indicator effects -->
+        <div class="led-effect led1"></div>
+        <div class="led-effect led2"></div>
+        <div class="led-effect led3"></div>
+        
+        <!-- Info panel -->
+        <div class="info-panel">
+            <h3>💡 Interactive Features</h3>
+            <ul>
+                <li>Hover over nodes for 3D effects</li>
+                <li>Animated data flow indicators</li>
+                <li>LED-style blinking effects</li>
+                <li>Floating animations</li>
+                <li>Gradient backgrounds</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Add interactive tooltips
+        document.querySelectorAll('.node').forEach(node => {
+            node.addEventListener('mouseenter', function() {
+                const info = this.getAttribute('data-info');
+                if (info) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.innerHTML = info;
+                    tooltip.style.cssText = `
+                        position: absolute;
+                        background: rgba(0, 0, 0, 0.9);
+                        color: white;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        font-size: 12px;
+                        z-index: 1000;
+                        pointer-events: none;
+                        top: -40px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        white-space: nowrap;
+                        border: 1px solid #ff4500;
+                    `;
+                    this.appendChild(tooltip);
+                }
+            });
+            
+            node.addEventListener('mouseleave', function() {
+                const tooltip = this.querySelector('.tooltip');
+                if (tooltip) {
+                    tooltip.remove();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
