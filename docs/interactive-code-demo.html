@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Sign Code Demo</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: linear-gradient(135deg, #0c0c0c, #1a1a1a);
+            margin: 0;
+            padding: 20px;
+            color: #00ff00;
+            overflow-x: auto;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .code-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .panel-title {
+            color: #ff6b6b;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-title::before {
+            content: '●';
+            color: #00ff00;
+            margin-right: 10px;
+            animation: blink 2s infinite;
+        }
+
+        .code-block {
+            background: #111;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #00ff00;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .typing-animation {
+            opacity: 0;
+            animation: typeIn 0.05s forwards;
+        }
+
+        @keyframes typeIn {
+            to { opacity: 1; }
+        }
+
+        .keyword { color: #ff79c6; }
+        .string { color: #f1fa8c; }
+        .comment { color: #6272a4; font-style: italic; }
+        .method { color: #50fa7b; }
+        .type { color: #8be9fd; }
+
+        .led-display {
+            background: #000;
+            border: 3px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            grid-column: 1 / -1;
+        }
+
+        .led-text {
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+            animation: scroll 5s linear infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .led-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 255, 255, 0.05) 2px,
+                rgba(255, 255, 255, 0.05) 4px
+            );
+            pointer-events: none;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .connected { background: #00ff00; }
+        .disconnected { background: #ff0000; }
+        .processing { background: #ffaa00; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .code-line {
+            margin: 5px 0;
+            padding: 2px 0;
+            border-radius: 3px;
+            transition: background 0.3s ease;
+        }
+
+        .executing {
+            background: rgba(0, 255, 0, 0.2);
+            animation: highlight 1s ease-in-out;
+        }
+
+        @keyframes highlight {
+            0%, 100% { background: rgba(0, 255, 0, 0.2); }
+            50% { background: rgba(0, 255, 0, 0.4); }
+        }
+
+        .terminal {
+            background: #000;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 150px;
+            overflow-y: scroll;
+            border: 1px solid #333;
+        }
+
+        .terminal-line {
+            margin: 3px 0;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .prompt { color: #00ff00; }
+        .output { color: #ffffff; }
+        .error { color: #ff0000; }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <!-- C# Code Panel -->
+        <div class="code-panel">
+            <h2 class="panel-title">C# LED Sign Control</h2>
+            
+            <div class="code-block">
+                <div class="code-line"><span class="keyword">using</span> <span class="type">MySign</span>;</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="comment">// Initialize connection</span></div>
+                <div class="code-line"><span class="type">SerialLEDSign</span> sign = <span class="keyword">new</span> <span class="type">SerialLEDSign</span>(<span class="string">"COM1"</span>);</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="comment">// Display animated message</span></div>
+                <div class="code-line">sign.<span class="method">setRunmode</span>(<span class="string">"Runmode1"</span>);</div>
+                <div class="code-line">sign.<span class="method">println</span>(<span class="string">"Hello LED World!"</span>);</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="comment">// Clean up</span></div>
+                <div class="code-line">sign.<span class="method">close</span>();</div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn" onclick="runCSharpDemo()">▶ Run Code</button>
+                <button class="btn" onclick="stopDemo()">⏹ Stop</button>
+                <button class="btn" onclick="changeMessage()">📝 Change Message</button>
+            </div>
+
+            <div class="status-indicator">
+                <div class="status-dot connected" id="csharp-status"></div>
+                <span id="csharp-status-text">Connected to COM1</span>
+            </div>
+
+            <div class="terminal" id="csharp-terminal">
+                <div class="terminal-line prompt">LED-SIGN> Initializing C# library...</div>
+            </div>
+        </div>
+
+        <!-- Perl Code Panel -->
+        <div class="code-panel">
+            <h2 class="panel-title">Perl Script Control</h2>
+            
+            <div class="code-block">
+                <div class="code-line"><span class="comment">#!/usr/bin/perl</span></div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="keyword">use strict</span>;</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="comment"># Configure LED sign properties</span></div>
+                <div class="code-line"><span class="keyword">my</span> $runMode = <span class="string">"\x19"</span>;</div>
+                <div class="code-line"><span class="keyword">my</span> $properties = <span class="string">"\xef"</span> . <span class="string">"\xA0"</span>;</div>
+                <div class="code-line"><span class="keyword">my</span> $message = <span class="string">$ARGV[0]</span>;</div>
+                <div class="code-line"></div>
+                <div class="code-line"><span class="comment"># Send to LED sign</span></div>
+                <div class="code-line"><span class="keyword">print</span> $header . $fileName . $runMode . $properties . $message;</div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn" onclick="runPerlDemo()">▶ Execute Script</button>
+                <button class="btn" onclick="showProtocol()">🔍 Show Protocol</button>
+                <button class="btn" onclick="testConnection()">🔗 Test Connection</button>
+            </div>
+
+            <div class="status-indicator">
+                <div class="status-dot processing" id="perl-status"></div>
+                <span id="perl-status-text">Ready to execute</span>
+            </div>
+
+            <div class="terminal" id="perl-terminal">
+                <div class="terminal-line prompt">$ chmod +x signControl.pl</div>
+                <div class="terminal-line output">Perl script ready for execution</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LED Display Simulation -->
+    <div class="led-display">
+        <h2 style="color: #ff6b6b; text-align: center; margin-bottom: 20px;">LED Sign Display Simulation</h2>
+        <div class="led-text" id="led-message">Hello LED World!</div>
+    </div>
+
+    <script>
+        let currentMessage = "Hello LED World!";
+        let isRunning = false;
+        let csharpTerminal = document.getElementById('csharp-terminal');
+        let perlTerminal = document.getElementById('perl-terminal');
+
+        function addTerminalLine(terminal, type, text, delay = 0) {
+            setTimeout(() => {
+                const line = document.createElement('div');
+                line.className = `terminal-line ${type}`;
+                line.textContent = text;
+                terminal.appendChild(line);
+                terminal.scrollTop = terminal.scrollHeight;
+            }, delay);
+        }
+
+        function updateLEDDisplay(message) {
+            document.getElementById('led-message').textContent = message;
+        }
+
+        function runCSharpDemo() {
+            if (isRunning) return;
+            isRunning = true;
+            
+            // Clear terminal
+            csharpTerminal.innerHTML = '';
+            
+            // Simulate execution
+            addTerminalLine(csharpTerminal, 'prompt', 'LED-SIGN> Connecting to COM1...', 0);
+            addTerminalLine(csharpTerminal, 'output', 'Serial port opened successfully', 500);
+            addTerminalLine(csharpTerminal, 'output', 'Setting run mode: Runmode1', 1000);
+            addTerminalLine(csharpTerminal, 'output', 'Sending message: "' + currentMessage + '"', 1500);
+            addTerminalLine(csharpTerminal, 'output', 'Message sent successfully', 2000);
+            addTerminalLine(csharpTerminal, 'prompt', 'LED-SIGN> Ready for next command', 2500);
+            
+            // Update status
+            document.getElementById('csharp-status').className = 'status-dot processing';
+            document.getElementById('csharp-status-text').textContent = 'Sending message...';
+            
+            setTimeout(() => {
+                document.getElementById('csharp-status').className = 'status-dot connected';
+                document.getElementById('csharp-status-text').textContent = 'Message sent successfully';
+                updateLEDDisplay(currentMessage);
+                isRunning = false;
+            }, 2000);
+        }
+
+        function runPerlDemo() {
+            if (isRunning) return;
+            isRunning = true;
+            
+            // Clear terminal
+            perlTerminal.innerHTML = '';
+            
+            // Simulate execution
+            addTerminalLine(perlTerminal, 'prompt', '$ ./signControl.pl "' + currentMessage + '"', 0);
+            addTerminalLine(perlTerminal, 'output', 'Configuring LED sign protocol...', 300);
+            addTerminalLine(perlTerminal, 'output', 'Header: \\x0\\xff\\xff\\x0\\xb\\x1\\xff\\x1\\x30', 600);
+            addTerminalLine(perlTerminal, 'output', 'Run mode: \\x19 (Scroll effect)', 900);
+            addTerminalLine(perlTerminal, 'output', 'Properties: \\xef\\xA0 (Font size)', 1200);
+            addTerminalLine(perlTerminal, 'output', 'Transmission complete', 1500);
+            addTerminalLine(perlTerminal, 'prompt', '$ ', 1800);
+            
+            // Update status
+            document.getElementById('perl-status').className = 'status-dot processing';
+            document.getElementById('perl-status-text').textContent = 'Executing script...';
+            
+            setTimeout(() => {
+                document.getElementById('perl-status').className = 'status-dot connected';
+                document.getElementById('perl-status-text').textContent = 'Script executed successfully';
+                updateLEDDisplay(currentMessage);
+                isRunning = false;
+            }, 1800);
+        }
+
+        function changeMessage() {
+            const messages = [
+                "Hello LED World!",
+                "Welcome to the LED Sign!",
+                "Scrolling Text Demo",
+                "C# and Perl Control",
+                "Interactive Animation!",
+                "LED Sign Protocol",
+                "Serial Communication"
+            ];
+            currentMessage = messages[Math.floor(Math.random() * messages.length)];
+            updateLEDDisplay(currentMessage);
+        }
+
+        function stopDemo() {
+            document.getElementById('led-message').textContent = "STOPPED";
+            document.getElementById('csharp-status').className = 'status-dot disconnected';
+            document.getElementById('csharp-status-text').textContent = 'Connection stopped';
+            document.getElementById('perl-status').className = 'status-dot disconnected';
+            document.getElementById('perl-status-text').textContent = 'Script stopped';
+        }
+
+        function showProtocol() {
+            perlTerminal.innerHTML = '';
+            addTerminalLine(perlTerminal, 'output', 'LED Sign Protocol Analysis:', 0);
+            addTerminalLine(perlTerminal, 'output', '═══════════════════════════', 100);
+            addTerminalLine(perlTerminal, 'output', 'Header:     \\x0\\xff\\xff\\x0\\xb\\x1\\xff', 200);
+            addTerminalLine(perlTerminal, 'output', 'File ID:    \\x1 (Message slot)', 300);
+            addTerminalLine(perlTerminal, 'output', 'Run Mode:   \\x30 (Display style)', 400);
+            addTerminalLine(perlTerminal, 'output', 'Properties: \\xef\\xA0 (Font & color)', 500);
+            addTerminalLine(perlTerminal, 'output', 'Message:    [Your text here]', 600);
+            addTerminalLine(perlTerminal, 'output', 'Footer:     \\xef\\xb0\\xef\\xa0\\xff\\xff\\x0', 700);
+        }
+
+        function testConnection() {
+            document.getElementById('perl-status').className = 'status-dot processing';
+            document.getElementById('perl-status-text').textContent = 'Testing connection...';
+            
+            perlTerminal.innerHTML = '';
+            addTerminalLine(perlTerminal, 'prompt', '$ perl -e "print qq{Testing connection...\\n}"', 0);
+            addTerminalLine(perlTerminal, 'output', 'Checking serial port /dev/ttyUSB0...', 500);
+            addTerminalLine(perlTerminal, 'output', 'Baud rate: 2400, Data: 8N1', 1000);
+            addTerminalLine(perlTerminal, 'output', 'Connection test: SUCCESS', 1500);
+            
+            setTimeout(() => {
+                document.getElementById('perl-status').className = 'status-dot connected';
+                document.getElementById('perl-status-text').textContent = 'Connection verified';
+            }, 1500);
+        }
+
+        // Auto-change message every 10 seconds for demo
+        setInterval(() => {
+            if (!isRunning) {
+                changeMessage();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
