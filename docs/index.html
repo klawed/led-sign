@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Sign Control Library - Interactive Demo Platform</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(180deg); }
+        }
+        
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .interactive-demos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .demo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #ffd700);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .demo-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+        
+        .demo-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-icon {
+            font-size: 3rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .demo-title {
+            font-size: 1.8rem;
+            color: #2d3748;
+            font-weight: bold;
+        }
+        
+        .demo-description {
+            color: #4a5568;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+        
+        .demo-preview {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-animation {
+            text-align: center;
+            color: #667eea;
+        }
+        
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        
+        .floating-element {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea40, #764ba240);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .floating-element:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .floating-element:nth-child(2) {
+            width: 15px;
+            height: 15px;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
+        .floating-element:nth-child(3) {
+            width: 25px;
+            height: 25px;
+            bottom: 20%;
+            left: 70%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.7; }
+            50% { transform: translateY(-20px) scale(1.1); opacity: 1; }
+        }
+        
+        .demo-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .features-grid {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+        
+        .features-title {
+            text-align: center;
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature {
+            text-align: center;
+            padding: 25px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .feature i {
+            font-size: 3rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+        
+        .feature h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .feature p {
+            color: #4a5568;
+        }
+        
+        .quick-start {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            margin-bottom: 40px;
+        }
+        
+        .quick-start h2 {
+            text-align: center;
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .code-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            border-radius: 15px;
+            padding: 25px;
+            color: #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .code-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #a0aec0;
+            font-weight: bold;
+        }
+        
+        .code-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 30px;
+            opacity: 0.9;
+        }
+        
+        .footer a {
+            color: #ffd700;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .led-simulation {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 2px;
+            margin: 15px 0;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .led-pixel {
+            width: 8px;
+            height: 8px;
+            background: #2d3748;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .led-pixel.active {
+            background: #ff6b6b;
+            box-shadow: 0 0 10px #ff6b6b;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .interactive-demos {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-card {
+                padding: 20px;
+            }
+            
+            .code-examples {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tv"></i> LED Sign Control Library</h1>
+            <p>Experience programmable LED signs through interactive 3D architecture visualization and live code demonstrations. Control scrolling message displays with C# and Perl libraries.</p>
+        </div>
+        
+        <div class="interactive-demos">
+            <div class="demo-card">
+                <div class="demo-header">
+                    <div class="demo-icon">🎨</div>
+                    <div class="demo-title">Animated Architecture Diagram</div>
+                </div>
+                <div class="demo-description">
+                    Explore our interactive 3D system overview with floating animations that visualize the complete LED sign communication architecture from application to hardware.
+                </div>
+                <div class="demo-preview">
+                    <div class="floating-elements">
+                        <div class="floating-element"></div>
+                        <div class="floating-element"></div>
+                        <div class="floating-element"></div>
+                    </div>
+                    <div class="preview-animation">
+                        <i class="fas fa-cubes" style="font-size: 4rem; margin-bottom: 15px;"></i>
+                        <div>Interactive 3D Architecture</div>
+                        <div style="font-size: 0.9rem; opacity: 0.7;">Click to explore the system flow</div>
+                    </div>
+                </div>
+                <a href="animated-architecture.html" class="demo-button">
+                    <i class="fas fa-play"></i> Launch Architecture Demo
+                </a>
+            </div>
+            
+            <div class="demo-card">
+                <div class="demo-header">
+                    <div class="demo-icon">💻</div>
+                    <div class="demo-title">Live Code Demo</div>
+                </div>
+                <div class="demo-description">
+                    Run C# and Perl examples with real-time LED output simulation. Edit code, execute commands, and see immediate visual feedback on virtual LED displays.
+                </div>
+                <div class="demo-preview">
+                    <div class="preview-animation">
+                        <i class="fas fa-code" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <div>Live Code Execution</div>
+                        <div class="led-simulation">
+                            <!-- LED pixels will be generated by JavaScript -->
+                        </div>
+                        <div style="font-size: 0.9rem; opacity: 0.7;">Simulated LED Output</div>
+                    </div>
+                </div>
+                <a href="interactive-code-demo.html" class="demo-button">
+                    <i class="fas fa-terminal"></i> Launch Code Demo
+                </a>
+            </div>
+        </div>
+        
+        <div class="features-grid">
+            <h2 class="features-title"><i class="fas fa-star"></i> Key Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-cogs"></i>
+                    <h3>Multiple Run Modes</h3>
+                    <p>Static display, scrolling, blinking, and animation effects with configurable speeds and directions.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-font"></i>
+                    <h3>Font Control</h3>
+                    <p>Various font sizes from 5x5 to 16x7 pixels with mixed case support for optimal readability.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-palette"></i>
+                    <h3>Color Support</h3>
+                    <p>Bright red and multi-color displays with brightness control and special effect combinations.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-magic"></i>
+                    <h3>Special Effects</h3>
+                    <p>Built-in animations for holidays, welcome messages, and custom special character sequences.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-clock"></i>
+                    <h3>Clock Display</h3>
+                    <p>Real-time clock synchronization with automatic date and time display functionality.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-usb"></i>
+                    <h3>Serial Communication</h3>
+                    <p>Configurable baud rates and port settings for RS232/USB serial interface compatibility.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="quick-start">
+            <h2><i class="fas fa-rocket"></i> Quick Start Examples</h2>
+            <div class="code-examples">
+                <div class="code-block">
+                    <div class="code-header">
+                        <i class="fab fa-microsoft"></i> C# Library Usage
+                    </div>
+                    <div class="code-content">using MySign;
+
+// Initialize connection
+SerialLEDSign sign = new SerialLEDSign("COM1");
+
+// Display a message
+sign.println("Hello World!");
+
+// Set clock to current time
+sign.setTimeToCurrentTime();
+
+// Clean up
+sign.close();</div>
+                </div>
+                
+                <div class="code-block">
+                    <div class="code-header">
+                        <i class="fab fa-linux"></i> Perl Script Usage
+                    </div>
+                    <div class="code-content"># Send message to LED sign
+./signControl.pl "Your message here"
+
+# Configure serial port (Linux/Mac)
+stty 2400 -opost -ocrnl -onlcr cs8 \
+     parenb -parodd stop 0 < /dev/ttyUSB0
+
+# Send test message
+echo "TEST MESSAGE" | ./signControl.pl</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>
+                <a href="https://github.com/klawed/led-sign" target="_blank">
+                    <i class="fab fa-github"></i> View Source on GitHub
+                </a>
+                |
+                <a href="https://github.com/klawed/led-sign/issues" target="_blank">
+                    <i class="fas fa-bug"></i> Report Issues
+                </a>
+                |
+                <a href="https://github.com/klawed/led-sign/blob/main/README.md" target="_blank">
+                    <i class="fas fa-book"></i> Documentation
+                </a>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize LED simulation
+        function initLEDSimulation() {
+            const ledContainer = document.querySelector('.led-simulation');
+            const numPixels = 40; // 20x2 grid
+            
+            // Create LED pixels
+            for (let i = 0; i < numPixels; i++) {
+                const pixel = document.createElement('div');
+                pixel.className = 'led-pixel';
+                ledContainer.appendChild(pixel);
+            }
+            
+            // Animate LED pixels
+            setInterval(() => {
+                const pixels = ledContainer.querySelectorAll('.led-pixel');
+                pixels.forEach(pixel => pixel.classList.remove('active'));
+                
+                // Create scrolling text effect
+                const activeCount = Math.floor(Math.random() * 8) + 5;
+                for (let i = 0; i < activeCount; i++) {
+                    const randomPixel = Math.floor(Math.random() * pixels.length);
+                    pixels[randomPixel].classList.add('active');
+                }
+            }, 500);
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initLEDSimulation);
+        
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
